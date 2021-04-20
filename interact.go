@@ -54,8 +54,6 @@ type V2RayPoint struct {
 
 /*V2RayVPNServiceSupportsSet To support Android VPN mode*/
 type V2RayVPNServiceSupportsSet interface {
-	Setup(Conf string) int
-	Prepare() int
 	Shutdown() int
 	Protect(int) bool
 	OnEmitStatus(int, string) int
@@ -155,8 +153,6 @@ func (v *V2RayPoint) pointloop() error {
 		return err
 	}
 
-	v.SupportSet.Prepare()
-	v.SupportSet.Setup("")
 	v.SupportSet.OnEmitStatus(0, "Running")
 	return nil
 }
@@ -177,7 +173,7 @@ func (v *V2RayPoint) MeasureDelay() (int64, error) {
 }
 
 // InitV2Env set v2 asset path
-func InitV2Env(envPath string) {
+func SetAssetsPath(envPath string, assetsPath string) {
 	//Initialize asset API, Since Raymond Will not let notify the asset location inside Process,
 	//We need to set location outside V2Ray
 	if len(envPath) > 0 {
@@ -188,7 +184,7 @@ func InitV2Env(envPath string) {
 	v2filesystem.NewFileReader = func(path string) (io.ReadCloser, error) {
 		if _, err := os.Stat(path); os.IsNotExist(err) {
 			_, file := filepath.Split(path)
-			return mobasset.Open(file)
+			return mobasset.Open(assetsPath + file)
 		}
 		return os.Open(path)
 	}
