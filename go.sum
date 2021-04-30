@@ -288,6 +288,8 @@ github.com/v2fly/v2ray-core/v4 v4.37.3 h1:FGmf5rtUo3xGHyZGJi8jEa7AKin05ROfPtegmG
 github.com/v2fly/v2ray-core/v4 v4.37.3/go.mod h1:MKka6sftbY/9KvMhWaKlAWW+irn5VcT7E2m9CDb1YQE=
 github.com/v2fly/v2ray-core/v4 v4.38.2-0.20210428154401-dbfc2138e40e h1:px9U3uQ5Umm1qSDWZjOqWN8GAsY5/hEIN5aF32VXYlk=
 github.com/v2fly/v2ray-core/v4 v4.38.2-0.20210428154401-dbfc2138e40e/go.mod h1:Yv/UmjjSwD3A/tvZ+m30V6/0SjXYZlyqDUaF8Rct/+E=
+github.com/v2fly/v2ray-core/v4 v4.38.2 h1:E9EpV++olRXSAipJHBXL/f9kFlQHG7lpPBlq4SYnisQ=
+github.com/v2fly/v2ray-core/v4 v4.38.2/go.mod h1:Yv/UmjjSwD3A/tvZ+m30V6/0SjXYZlyqDUaF8Rct/+E=
 github.com/viant/assertly v0.4.8 h1:5x1GzBaRteIwTr5RAGFVG14uNeRFxVNbXPWrK2qAgpc=
 github.com/viant/assertly v0.4.8/go.mod h1:aGifi++jvCrUaklKEKT0BU95igDNaqkvz+49uaYMPRU=
 github.com/viant/toolbox v0.24.0 h1:6TteTDQ68CjgcCe8wH3D3ZhUQQOJXMTbj/D9rkk2a1k=
