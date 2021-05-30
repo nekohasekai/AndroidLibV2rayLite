@@ -1,24 +1,18 @@
 package libv2ray
 
 import (
-	"context"
-	"errors"
 	"fmt"
 	"io"
 	"log"
-	"net"
-	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
 	"sync"
-	"time"
 
 	"github.com/nekohasekai/AndroidLibV2rayLite/VPN"
 	mobasset "golang.org/x/mobile/asset"
 
 	v2core "github.com/v2fly/v2ray-core/v4"
-	v2net "github.com/v2fly/v2ray-core/v4/common/net"
 	v2filesystem "github.com/v2fly/v2ray-core/v4/common/platform/filesystem"
 	v2stats "github.com/v2fly/v2ray-core/v4/features/stats"
 	v2serial "github.com/v2fly/v2ray-core/v4/infra/conf/serial"
@@ -49,14 +43,12 @@ type V2RayPoint struct {
 
 	DomainName           string
 	ConfigureFileContent string
-	AsyncResolve         bool
 }
 
 /*V2RayVPNServiceSupportsSet To support Android VPN mode*/
 type V2RayVPNServiceSupportsSet interface {
-	Shutdown() int
 	Protect(int) bool
-	OnEmitStatus(int, string) int
+	OnEmitStatus(string)
 }
 
 /*RunLoop Run V2Ray main loop
@@ -77,7 +69,7 @@ func (v *V2RayPoint) RunLoop(prefIPv6 bool) (err error) {
 				if !v.dialer.IsVServerReady() {
 					log.Println("vServer cannot resolved, shutdown")
 					v.StopLoop()
-					v.SupportSet.Shutdown()
+					v.SupportSet.OnEmitStatus("Shutdown")
 				}
 
 			// stop waiting if manually closed
@@ -85,11 +77,7 @@ func (v *V2RayPoint) RunLoop(prefIPv6 bool) (err error) {
 			}
 		}()
 
-		if v.AsyncResolve {
-			go v.dialer.PrepareDomain(v.DomainName, v.closeChan, prefIPv6)
-		} else {
-			v.dialer.PrepareDomain(v.DomainName, v.closeChan, prefIPv6)
-		}
+		v.dialer.PrepareDomain(v.DomainName, v.closeChan, prefIPv6)
 
 		err = v.pointloop()
 	}
@@ -104,7 +92,7 @@ func (v *V2RayPoint) StopLoop() (err error) {
 	if v.IsRunning {
 		close(v.closeChan)
 		v.shutdownInit()
-		v.SupportSet.OnEmitStatus(0, "Closed")
+		v.SupportSet.OnEmitStatus("Closed")
 	}
 	return
 }
@@ -153,23 +141,8 @@ func (v *V2RayPoint) pointloop() error {
 		return err
 	}
 
-	v.SupportSet.OnEmitStatus(0, "Running")
+	v.SupportSet.OnEmitStatus("Running")
 	return nil
-}
-
-func (v *V2RayPoint) MeasureDelay() (int64, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 12*time.Second)
-
-	go func() {
-		select {
-		case <-v.closeChan:
-			// cancel request if close called during meansure
-			cancel()
-		case <-ctx.Done():
-		}
-	}()
-
-	return measureInstDelay(ctx, v.Vpoint)
 }
 
 // InitV2Env set v2 asset path
@@ -196,29 +169,6 @@ func TestConfig(ConfigureFileContent string) error {
 	return err
 }
 
-func MeasureOutboundDelay(ConfigureFileContent string) (int64, error) {
-	config, err := v2serial.LoadJSONConfig(strings.NewReader(ConfigureFileContent))
-	if err != nil {
-		return -1, err
-	}
-
-	// dont listen to anything for test purpose
-	config.Inbound = nil
-	config.Transport = nil
-	// keep only basic features
-	config.App = config.App[:4]
-
-	inst, err := v2core.New(config)
-	if err != nil {
-		return -1, err
-	}
-
-	inst.Start()
-	delay, err := measureInstDelay(context.Background(), inst)
-	inst.Close()
-	return delay, err
-}
-
 /*NewV2RayPoint new V2RayPoint*/
 func NewV2RayPoint(s V2RayVPNServiceSupportsSet, adns bool) *V2RayPoint {
 	// inject our own log writer
@@ -231,47 +181,11 @@ func NewV2RayPoint(s V2RayVPNServiceSupportsSet, adns bool) *V2RayPoint {
 	dialer := VPN.NewPreotectedDialer(s)
 	v2internet.UseAlternativeSystemDialer(dialer)
 	return &V2RayPoint{
-		SupportSet:   s,
-		dialer:       dialer,
-		AsyncResolve: adns,
+		SupportSet: s,
+		dialer:     dialer,
 	}
 }
 
 func GetVersion() string {
 	return fmt.Sprintf("v%s", v2core.Version())
-}
-
-func measureInstDelay(ctx context.Context, inst *v2core.Instance) (int64, error) {
-	if inst == nil {
-		return -1, errors.New("core instance nil")
-	}
-
-	tr := &http.Transport{
-		TLSHandshakeTimeout: 6 * time.Second,
-		DisableKeepAlives:   true,
-		DialContext: func(ctx context.Context, network, addr string) (net.Conn, error) {
-			dest, err := v2net.ParseDestination(fmt.Sprintf("%s:%s", network, addr))
-			if err != nil {
-				return nil, err
-			}
-			return v2core.Dial(ctx, inst, dest)
-		},
-	}
-
-	c := &http.Client{
-		Transport: tr,
-		Timeout:   12 * time.Second,
-	}
-
-	req, _ := http.NewRequestWithContext(ctx, "GET", "http://www.google.com/generate_204", nil)
-	start := time.Now()
-	resp, err := c.Do(req)
-	if err != nil {
-		return -1, err
-	}
-	if resp.StatusCode != http.StatusNoContent {
-		return -1, fmt.Errorf("status != 204: %s", resp.Status)
-	}
-	resp.Body.Close()
-	return time.Since(start).Milliseconds(), nil
 }
