@@ -4,14 +4,16 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/xtls/xray-core/features/dns"
+	"github.com/xtls/xray-core/features/outbound"
 	"log"
 	"net"
 	"os"
 	"sync"
 	"time"
 
-	v2net "github.com/v2fly/v2ray-core/v4/common/net"
-	v2internet "github.com/v2fly/v2ray-core/v4/transport/internet"
+	v2net "github.com/xtls/xray-core/common/net"
+	v2internet "github.com/xtls/xray-core/transport/internet"
 	"golang.org/x/sys/unix"
 )
 
@@ -199,6 +201,11 @@ func (d *ProtectedDialer) getFd(network v2net.Network) (fd int, err error) {
 		err = fmt.Errorf("unknow network")
 	}
 	return
+}
+
+// Init implement internet.SystemDialer
+func (d *ProtectedDialer) Init(_ dns.Client, _ outbound.Manager) {
+	// do nothing
 }
 
 // Dial exported as the protected dial method

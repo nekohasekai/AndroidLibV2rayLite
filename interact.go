@@ -2,6 +2,8 @@ package libv2ray
 
 import (
 	"fmt"
+	"github.com/nekohasekai/AndroidLibXrayLite/VPN"
+	mobasset "golang.org/x/mobile/asset"
 	"io"
 	"log"
 	"os"
@@ -9,22 +11,19 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/nekohasekai/AndroidLibV2rayLite/VPN"
-	mobasset "golang.org/x/mobile/asset"
+	v2filesystem "github.com/xtls/xray-core/common/platform/filesystem"
+	v2core "github.com/xtls/xray-core/core"
+	v2stats "github.com/xtls/xray-core/features/stats"
+	v2serial "github.com/xtls/xray-core/infra/conf/serial"
+	_ "github.com/xtls/xray-core/main/distro/all"
+	v2internet "github.com/xtls/xray-core/transport/internet"
 
-	v2core "github.com/v2fly/v2ray-core/v4"
-	v2filesystem "github.com/v2fly/v2ray-core/v4/common/platform/filesystem"
-	v2stats "github.com/v2fly/v2ray-core/v4/features/stats"
-	v2serial "github.com/v2fly/v2ray-core/v4/infra/conf/serial"
-	_ "github.com/v2fly/v2ray-core/v4/main/distro/all"
-	v2internet "github.com/v2fly/v2ray-core/v4/transport/internet"
-
-	v2applog "github.com/v2fly/v2ray-core/v4/app/log"
-	v2commlog "github.com/v2fly/v2ray-core/v4/common/log"
+	v2applog "github.com/xtls/xray-core/app/log"
+	v2commlog "github.com/xtls/xray-core/common/log"
 )
 
 const (
-	v2Asset = "v2ray.location.asset"
+	v2Asset = "xray.location.asset"
 )
 
 /*V2RayPoint V2Ray Point Server
